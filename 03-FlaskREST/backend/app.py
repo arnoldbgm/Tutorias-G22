@@ -4,8 +4,10 @@ from flask_restful import Api
 from flask_migrate import Migrate  # Es la importacion de las migraciones
 from routes.categoria_routes import CategoriaListResource
 from routes.post_routes import PostListResource
+from flask_cors import CORS
 # Crear una instancia de flask
 app = Flask(__name__)
+CORS(app)
 api = Api(app)
 # Configuraciones 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:root@localhost:5432/db_blogs_flask'

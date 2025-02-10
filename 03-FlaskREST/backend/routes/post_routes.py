@@ -13,7 +13,7 @@ class PostListResource(Resource):
                 'id': post.id,
                 'titulo': post.titulo,
                 'contenido': post.contenido,
-                'fecha': post.fecha,
+                'fecha': post.fecha.isoformat(),
                 'categoria_id': post.categoria_id
             })
         return data
