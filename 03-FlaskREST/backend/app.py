@@ -1,31 +1,21 @@
 from flask import Flask
 from db import db
+from flask_restful import Api
 from flask_migrate import Migrate  # Es la importacion de las migraciones
-from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey
+from routes.categoria_routes import CategoriaListResource
+from routes.post_routes import PostListResource
 # Crear una instancia de flask
 app = Flask(__name__)
-
+api = Api(app)
 # Configuraciones 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:root@localhost:5432/db_blogs_flask'
 
 db.init_app(app)
 migrate = Migrate(app, db)
 
-# Para crear una tabla usando SQLALchemy
-class CategoriasTable(db.Model):
-    __tablename__ = "categorias"
-
-    id = Column(Integer, primary_key=True)
-    nombre = Column(String(255))
-
-class PostTable(db.Model):
-    __tablename__ = "posts"
-
-    id = Column(Integer, primary_key=True)
-    titulo = Column(String(255))
-    contenido = Column(Text)
-    fecha = Column(DateTime)
-    categoria_id = Column(Integer, ForeignKey('categorias.id'))
+# Rutas de mi aplicacion
+api.add_resource(CategoriaListResource, '/categorias')
+api.add_resource(PostListResource, '/posts')
 
 # Levantar mi servidor
 if __name__ == '__main__':
