@@ -23,6 +23,6 @@ En este repositorio encontraras todas las sesiones de tutoria a lo largo del boo
 
 <ul>
 <li><a href="https://arnoldbgm.github.io/Tutorias-G22/01-Tutoria/">01-Tutoria</a> </li>
-<li><a href="https://arnoldbgm.github.io/Tutorias-G22/02-Flask-React/">02-Flask-React</a></li>
+<li><a href="https://arnoldbgm.github.io/Tutorias-G22/02-Flask-React/backend/">02-Flask-React</a></li>
 <li><a href="https://arnoldbgm.github.io/Tutorias-G22/03-FlaskREST/">03-FlaskREST</a></li>
 </ul>
