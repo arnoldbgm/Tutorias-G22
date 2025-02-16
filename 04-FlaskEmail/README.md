@@ -1,319 +1,147 @@
-# 📌 **Guía: API REST con Flask-RESTful, SQLAlchemy, Flask-Migrate y PostgreSQL**
-
-En esta guía, crearemos una API REST en **Flask** con **Flask-RESTful**, utilizando **SQLAlchemy** para la gestión de la base de datos y **Flask-Migrate** para el control de versiones de la base de datos.
-
----
-
-## **📂 Estructura del Proyecto**
-
-Organizaremos el proyecto de manera modular para facilitar la escalabilidad y el mantenimiento:
-
-```
-/project_root
-├── app.py                # Inicialización de la app y las rutas de la API
-├── db.py                 # Inicialización de la base de datos
-├── models/               # Carpeta para los modelos
-│   ├── __init__.py
-│   ├── categoria.py
-│   └── post.py
-├── controllers/          # Carpeta para la lógica de los controladores
-│   ├── __init__.py
-│   ├── categoria_controller.py
-│   └── post_controller.py
-├── routes/               # Carpeta para las rutas de la API
-│   ├── __init__.py
-│   ├── categoria_routes.py
-│   └── post_routes.py
-├── migrations/           # Carpeta para las migraciones
-└── requirements.txt      # Dependencias del proyecto
-
-```
-
----
-
-## **1️⃣ Crear el entorno virtual e instalar dependencias**
-
-📌 **Crear un entorno virtual:**
+### 1. Crear un entorno virtual 🐍
 
 ```bash
 python -m venv venv
-
+# Solo si no funciona el creado
+python -m venv venv --without-pip
 ```
 
-📌 **Activarlo:**
-
-- **Windows:**
-    
+### 2. Activar el entorno virtual ⚡
+- En Windows:
     ```bash
-    venv\Scripts\activate
-    
+        venv\Scripts\activate
     ```
-    
-- **Git Bash/macOS/Linux:**
-    
+- En gitbash:
+    ```
+        source venv/Scripts/activate
+    ```
+- En macOS y Linux:
     ```bash
-    source venv/bin/activate
-    
+        source venv/bin/activate
     ```
-    
 
-📌 **Instalar dependencias:**
+
+### 3. Instalar Flask-Mail 🛠️
 
 ```bash
-pip install flask flask-restful flask-sqlalchemy flask-migrate psycopg2
-
+pip install Flask-Mail
+# Para verificiar si se instalao
+pip list 
 ```
 
-Si usas `requirements.txt`, agrégale:
+## Configuración de Flask-Mail
 
-```
-flask
-flask-restful
-flask-sqlalchemy
-flask-migrate
-psycopg2
+1. **Configuración en `app.py`**:
 
-```
+   Asegúrate de que `app.py` esté configurado para usar Flask-Mail. Aquí está la configuración básica:
 
-Y luego instala con:
+   ```python
+   from flask import Flask
+   from flask_mail import Mail
 
-```bash
-pip install -r requirements.txt
+   app = Flask(__name__)
 
-```
+   # Configuración de Flask-Mail
+   app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+   app.config['MAIL_PORT'] = 587
+   app.config['MAIL_USERNAME'] = '<TU_EMAIL>'
+   app.config['MAIL_PASSWORD'] = '<TU_CONTRASEÑA>'
+   app.config['MAIL_DEFAULT_SENDER'] = '<TU_EMAIL>'
+   app.config['MAIL_USE_TLS'] = True
+   app.config['MAIL_USE_SSL'] = False
+
+   # Inicialización de Flask-Mail
+   mail = Mail(app)
+   ```
+
+2. **Archivo HTML para el correo**:
+
+   Coloca el archivo HTML del correo en la carpeta `templates`. Por ejemplo, `welcome_email.html`:
+
+   ```html
+   <!DOCTYPE html>
+   <html>
+   <head>
+       <title>Bienvenido</title>
+   </head>
+   <body>
+       <h1>Hola {{ username }}</h1>
+       <p>Gracias por registrarte en nuestra aplicación. ¡Esperamos que disfrutes de tu experiencia!</p>
+   </body>
+   </html>
+   ```
+
+## Envío de Correos Electrónicos
+
+1. **Función para enviar correos**:
+
+   En el archivo `utils/email_utils.py`, define la función `send_welcome_email` para enviar correos electrónicos:
+
+   ```python
+   from flask_mail import Message
+   from flask import render_template
+
+   def send_welcome_email(to_email, username):
+       from app import mail  # Importación tardía para evitar ciclos
+       msg = Message('Bienvenido a nuestra aplicación', recipients=[to_email])
+       msg.html = render_template('welcome_email.html', username=username)
+       mail.send(msg)
+   ```
+
+2. **Uso de la función en `usuarios_router.py`**:
+
+   En tu archivo de enrutamiento (por ejemplo, `router/usuarios_router.py`), llama a la función `send_welcome_email` después de registrar un nuevo usuario:
+
+   ```python
+   from flask import Blueprint, request, jsonify
+   from models.usuarios_model import UsuarioModel
+   from db import db
+   from flask_bcrypt import Bcrypt
+   from utils.email_utils import send_welcome_email
+
+   bcrypt = Bcrypt()
+
+   usuario_router = Blueprint('usuario_router', __name__)
+
+   @usuario_router.route('/register', methods=['POST'])
+   def register():
+       data = request.get_json()
+
+       # Validar si el usuario ya existe
+       if UsuarioModel.query.filter_by(username=data['username']).first() or UsuarioModel.query.filter_by(email=data['email']).first():
+           return jsonify({"message": "Usuario o correo electrónico ya registrado"}), 400
+
+       # Hashing de la contraseña
+       hashed_password = bcrypt.generate_password_hash(data['password']).decode('utf-8')
+
+       # Crear un nuevo usuario
+       new_user = UsuarioModel(username=data['username'], email=data['email'], password=hashed_password)
+
+       # Guardar en la base de datos
+       db.session.add(new_user)
+       db.session.commit()
+
+       # Enviar correo de bienvenida
+       send_welcome_email(new_user.email, new_user.username)
+
+       return jsonify({"message": "Usuario registrado con éxito"}), 201
+   ```
+
+## Ejecución
+
+1. **Ejecuta la aplicación**:
+
+   ```bash
+   python app.py
+   ```
+
+2. **Prueba el registro de usuarios**:
+
+   Realiza una solicitud POST a `/api/v1/register` con los datos del usuario para probar el envío de correos electrónicos.
+
+## Notas
+
+- Asegúrate de reemplazar `<TU_EMAIL>` y `<TU_CONTRASEÑA>` con tus credenciales de correo electrónico.
+- La configuración de `MAIL_SERVER` puede necesitar ajustes dependiendo del proveedor de correo electrónico que uses.
 
 ---
-
-## **2️⃣ Configurar la base de datos (`db.py`)**
-
-📌 **Crear `db.py` para inicializar SQLAlchemy:**
-
-```python
-from flask_sqlalchemy import SQLAlchemy
-
-db = SQLAlchemy()
-
-```
-
----
-
-## **3️⃣ Crear los Modelos (`models/`)**
-
-📌 **Crear `models/categoria.py`:**
-
-```python
-from db import db
-from sqlalchemy import Column, Integer, String
-
-class CategoriasTable(db.Model):
-    __tablename__ = "categorias"
-
-    id = Column(Integer, primary_key=True)
-    nombre = Column(String(255), nullable=False)
-
-```
-
-📌 **Crear `models/post.py`:**
-
-```python
-from db import db
-from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey
-
-class PostTable(db.Model):
-    __tablename__ = "posts"
-
-    id = Column(Integer, primary_key=True)
-    titulo = Column(String(255), nullable=False)
-    contenido = Column(Text, nullable=False)
-    fecha = Column(DateTime, nullable=False)
-    categoria_id = Column(Integer, ForeignKey('categorias.id'), nullable=False)
-
-```
-
----
-
-## **4️⃣ Crear los Controladores (`controllers/`)**
-
-📌 **Crear `controllers/categoria_controller.py`:**
-
-```python
-from flask import request
-from db import db
-from models.categoria import CategoriasTable
-
-def get_categorias():
-    categorias = CategoriasTable.query.all()
-    return [{'id': categoria.id, 'nombre': categoria.nombre} for categoria in categorias]
-
-def get_categoria(id):
-    categoria = CategoriasTable.query.get(id)
-    if categoria:
-        return {'id': categoria.id, 'nombre': categoria.nombre}
-    return {'message': 'Categoría no encontrada'}, 404
-
-def create_categoria():
-    data = request.get_json()
-    nueva_categoria = CategoriasTable(nombre=data['nombre'])
-    db.session.add(nueva_categoria)
-    db.session.commit()
-    return {'id': nueva_categoria.id, 'nombre': nueva_categoria.nombre}, 201
-
-def update_categoria(id):
-    data = request.get_json()
-    categoria = CategoriasTable.query.get(id)
-    if categoria:
-        categoria.nombre = data['nombre']
-        db.session.commit()
-        return {'id': categoria.id, 'nombre': categoria.nombre}
-    return {'message': 'Categoría no encontrada'}, 404
-
-def delete_categoria(id):
-    categoria = CategoriasTable.query.get(id)
-    if categoria:
-        db.session.delete(categoria)
-        db.session.commit()
-        return {'message': 'Categoría eliminada'}, 200
-    return {'message': 'Categoría no encontrada'}, 404
-
-```
-
-📌 **Crear `controllers/post_controller.py`:**
-
-```python
-from flask import request
-from db import db
-from models.post import PostTable
-
-def get_posts():
-    posts = PostTable.query.all()
-    return [{'id': post.id, 'titulo': post.titulo, 'contenido': post.contenido, 'fecha': post.fecha, 'categoria_id': post.categoria_id} for post in posts]
-
-def get_post(id):
-    post = PostTable.query.get(id)
-    if post:
-        return {'id': post.id, 'titulo': post.titulo, 'contenido': post.contenido, 'fecha': post.fecha, 'categoria_id': post.categoria_id}
-    return {'message': 'Post no encontrado'}, 404
-
-def create_post():
-    data = request.get_json()
-    nuevo_post = PostTable(
-        titulo=data['titulo'],
-        contenido=data['contenido'],
-        fecha=data['fecha'],
-        categoria_id=data['categoria_id']
-    )
-    db.session.add(nuevo_post)
-    db.session.commit()
-    return {'id': nuevo_post.id, 'titulo': nuevo_post.titulo, 'contenido': nuevo_post.contenido}, 201
-
-def update_post(id):
-    data = request.get_json()
-    post = PostTable.query.get(id)
-    if post:
-        post.titulo = data['titulo']
-        post.contenido = data['contenido']
-        post.fecha = data['fecha']
-        post.categoria_id = data['categoria_id']
-        db.session.commit()
-        return {'id': post.id, 'titulo': post.titulo, 'contenido': post.contenido}
-    return {'message': 'Post no encontrado'}, 404
-
-def delete_post(id):
-    post = PostTable.query.get(id)
-    if post:
-        db.session.delete(post)
-        db.session.commit()
-        return {'message': 'Post eliminado'}, 200
-    return {'message': 'Post no encontrado'}, 404
-
-```
-
----
-
-## **5️⃣ Crear las Rutas (`routes/`)**
-
-📌 **Crear `routes/categoria_routes.py`:**
-
-```python
-from flask_restful import Resource
-from controllers.categoria_controller import get_categorias, get_categoria, create_categoria, update_categoria, delete_categoria
-
-class CategoriaListResource(Resource):
-    def get(self):
-        return get_categorias()
-
-    def post(self):
-        return create_categoria()
-
-class CategoriaResource(Resource):
-    def get(self, id):
-        return get_categoria(id)
-
-    def put(self, id):
-        return update_categoria(id)
-
-    def delete(self, id):
-        return delete_categoria(id)
-
-```
-
-📌 **Crear `routes/post_routes.py`:**
-
-```python
-from flask_restful import Resource
-from controllers.post_controller import get_posts, get_post, create_post, update_post, delete_post
-
-class PostListResource(Resource):
-    def get(self):
-        return get_posts()
-
-    def post(self):
-        return create_post()
-
-class PostResource(Resource):
-    def get(self, id):
-        return get_post(id)
-
-    def put(self, id):
-        return update_post(id)
-
-    def delete(self, id):
-        return delete_post(id)
-
-```
-
----
-
-## **6️⃣ Configurar `app.py` y ejecutar la API**
-
-📌 **Crear `app.py`:**
-
-```python
-from flask import Flask
-from flask_restful import Api
-from db import db
-from flask_migrate import Migrate
-from routes.categoria_routes import CategoriaListResource, CategoriaResource
-from routes.post_routes import PostListResource, PostResource
-
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:root@localhost:5432/db_blogs_flask'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-db.init_app(app)
-migrate = Migrate(app, db)
-api = Api(app)
-
-api.add_resource(CategoriaListResource, '/categorias')
-api.add_resource(CategoriaResource, '/categorias/<int:id>')
-api.add_resource(PostListResource, '/posts')
-api.add_resource(PostResource, '/posts/<int:id>')
-
-if __name__ == '__main__':
-    app.run(debug=True)
-
-```
-
----
-
-¡Con esto, tienes tu API REST bien estructurada y lista para crecer! 🚀
