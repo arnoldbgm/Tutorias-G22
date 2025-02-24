@@ -4,7 +4,7 @@ from flask_restful import Api
 from flask_migrate import Migrate 
 from models.usuarios_model import UsuarioModel
 from flask_jwt_extended import JWTManager
-from routes.usuarios_routes import RegisterUser
+from routes.usuarios_routes import RegisterUser, Login, RefreshToken
 
 # Crear una instancia de flask
 app = Flask(__name__)
@@ -21,6 +21,8 @@ migrate = Migrate(app, db)
 
 # Rutas de mi aplicacion
 api.add_resource(RegisterUser, '/api/v1/register')
+api.add_resource(Login, '/api/v1/login')
+api.add_resource(RefreshToken, '/api/v1/refresh')
 
 # Levantar mi servidor
 if __name__ == '__main__':

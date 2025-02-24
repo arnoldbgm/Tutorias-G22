@@ -3,7 +3,7 @@ from flask_restful import Resource
 from db import db
 from models.usuarios_model import UsuarioModel
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_jwt_extended import create_access_token, create_refresh_token
+from flask_jwt_extended import create_access_token, create_refresh_token, get_jwt_identity, jwt_required
 from datetime import timedelta
 
 class RegisterUser(Resource):
@@ -68,11 +68,15 @@ class Login(Resource):
       user = UsuarioModel.query.filter_by(username=username).first()
 
       if user and check_password_hash(user.password, password):
+         # Modificacion del Payload
+         payload = {"role": user.rol, "email": user.email}
+
          # Creamos nuestra access token
          # Access token dura 30 dias
          access_token = create_access_token(
                                           identity=username, 
-                                          expires_delta=timedelta(days=30))
+                                          expires_delta=timedelta(days=30),
+                                          additional_claims=payload)
          # Creamos el refresh token
          # Refresh token dura 90 dias
          resfresh_token = create_refresh_token(
@@ -82,3 +86,16 @@ class Login(Resource):
          return jsonify(
                         access_token=access_token, 
                         refresh_token=resfresh_token)
+      
+      return {"message": "Usuario o contraseña incorrecta"}, 400
+   
+# El endpoint para refrescar el access
+class RefreshToken(Resource):
+   @jwt_required(refresh=True)
+   def post(self):
+      # Vamos a verificar la identidad
+      usuario = get_jwt_identity()
+      new_access_token = create_access_token(identity=usuario, 
+                          expires_delta=timedelta(days=30))
+      
+      return jsonify(new_access_token=new_access_token)
