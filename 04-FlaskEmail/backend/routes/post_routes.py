@@ -72,9 +72,9 @@ class PostDateResource(Resource):
         
         # localhost:5000/posts/date?fecha_inicio=2021-09-01&fecha_fin=2021-09-30
         # Capturar los parametros fecha_inicio y fecha_fin
-        fecha_inicio = request.args.get('fecha_inicio')
-        fecha_fin= request.args.get('fecha_fin')
-
+        fecha_inicio = request.args.get('fecha_inicio') # 2021-09-01
+        fecha_fin= request.args.get('fecha_fin') # 2021-09-30
+        
         try:
             if fecha_inicio:
                 fecha_inicio =  datetime.fromisoformat(fecha_inicio)
@@ -89,31 +89,25 @@ class PostDateResource(Resource):
         # SELECT * FROM posts WHERE fecha > '2021-09-01'
         # SELECT * FROM posts WHERE fecha < '2021-09-01'
         # SELECT * FROM posts WHERE fecha > '2021-09-01' and fecha < '2021-09-30'
-        posts = PostTable.query.filter(
-            PostTable.fecha >= fecha_inicio if fecha_inicio else True,
-            PostTable.fecha <= fecha_fin if fecha_fin else True
-        ).all()
         
-        # data = []
+        # Query (Consulta con varios filtros)
+        query = PostTable.query
 
-        # for post in posts:
-        #     data.append({
-        #         'id': post.id,
-        #         'titulo': post.titulo,
-        #         'contenido': post.contenido,
-        #         'fecha': post.fecha.isoformat(),
-        #         'categoria_id': post.categoria_id
-        #     })
+        if fecha_inicio and fecha_fin:
+            query = query.filter(PostTable.fecha.between(fecha_inicio, fecha_fin))
+        elif fecha_inicio:
+            query = query.filter(PostTable.fecha >= fecha_inicio)
+        elif fecha_fin:
+            query = query.filter(PostTable.fecha <= fecha_fin)
 
-        # return jsonify(data)
-
-        # Vamos ahora a paginar las fechas
-        # Todas las fechas las tengo guardas en posts
+        # Paginacion
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 10, type=int)
 
-        post_paginate = posts.paginate(page=page, per_page=per_page, error_out=False)
-
+        # Obtener los posts ya paginados
+        post_paginate = query.paginate(page=page, per_page=per_page, error_out=False)
+        
+        print(post_paginate.items)
         data = []
 
         for post in post_paginate.items:
@@ -132,4 +126,3 @@ class PostDateResource(Resource):
             'per_page': post_paginate.per_page,
             'data': data
         })
-
