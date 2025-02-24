@@ -5,11 +5,13 @@ from flask_migrate import Migrate
 from models.usuarios_model import UsuarioModel
 from flask_jwt_extended import JWTManager
 from routes.usuarios_routes import RegisterUser, Login, RefreshToken
+from flask_cors import CORS
 
 # Crear una instancia de flask
 app = Flask(__name__)
 
 api = Api(app)
+CORS(app)
 # Configuraciones 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config["JWT_SECRET_KEY"] = "super-secret" 

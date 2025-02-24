@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LoginPage, RegisterPage, NotFoundPage, HomePage } from "../pages";
+import PrivateRoutes from "../utils/PrivateRoutes";
 
 export default function Router() {
   return (
@@ -9,7 +10,9 @@ export default function Router() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="*" element={<NotFoundPage />} />
-          <Route path="/home" element={<HomePage/>}/>
+          <Route element={<PrivateRoutes />}>
+            <Route path="/home" element={<HomePage />} />
+          </Route>
         </Route>
       </Routes>
     </BrowserRouter>

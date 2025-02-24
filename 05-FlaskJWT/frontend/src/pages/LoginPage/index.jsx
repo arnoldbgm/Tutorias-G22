@@ -26,7 +26,7 @@ const LoginPage = () => {
 
     try {
       // Envía una solicitud POST al endpoint de registro usando fetch
-      const response = await fetch("http://localhost:8000/api/token/", {
+      const response = await fetch("http://127.0.0.1:5000/api/v1/login", {
         method: "POST",
         // Especifica que tipo de datos voy a enviar mi servidor
         headers: {
@@ -42,8 +42,8 @@ const LoginPage = () => {
       const data = await response.json();
       console.log("Datos de registro:", data);
       alert("Acceso correcto");
-      localStorage.setItem("accessToken", data.access);
-      localStorage.setItem("refreshToken", data.refresh);
+      localStorage.setItem("accessToken", data.access_token);
+      localStorage.setItem("refreshToken", data.refresh_token);
       // Redirige a HomePage
       navigate("/home");
     } catch (error) {

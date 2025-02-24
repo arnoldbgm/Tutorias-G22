@@ -1,5 +1,6 @@
 const HomePage = () => {
 
+
    const imageUrl = "https://cataas.com/cat?type=square";
 
   return (
