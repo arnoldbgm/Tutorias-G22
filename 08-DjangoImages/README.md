@@ -72,24 +72,32 @@ cloudinary.config(
 )
 ```
 
-### Uso de Cloudinary en Serializers
+### Usando el ListCreateAPIView
 
 ```python
-from .models import ImagenesModel
-from rest_framework import serializers
 import cloudinary
+from rest_framework.response import Response
 
-class ImagenesSerializer(serializers.ModelSerializer):
-   imagen = serializers.SerializerMethodField()
+class ImagenListCreate(generics.ListCreateAPIView):
+   queryset = ImagenModel.objects.all()
+   # SELECT * FROM imagenes
+   serializer_class = ImagenSerializer
 
-   class Meta:
-      model = ImagenesModel
-      fields = '__all__'
+   def get(self, request, *args, **kwargs):
+      imagines_cloudinary = self.get_queryset()
+      # SELECT * FROM imagenes
+      data = []
 
-   def get_imagen(self, obj):
-      if obj.imagen:
-         return f"https://res.cloudinary.com/{cloudinary.config().cloud_name}/{obj.imagen}"
-      return None
+      for obj in imagines_cloudinary:
+         imagen_url = f"https://res.cloudinary.com/{cloudinary.config().cloud_name}/{obj.image}"
+         
+         data.append({
+            'id': obj.id,
+            'title': obj.title,
+            'image': imagen_url
+         })
+
+      return Response(data)
 ```
 
 ## Configuración de Imágenes en Local

@@ -9,6 +9,9 @@ https://docs.djangoproject.com/en/5.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
 
 from pathlib import Path
 
@@ -127,5 +130,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Archivo de media
 # Esta es la primera configuracion que nosotros debemos de tener para
 # poder subir archivos a nuestro servidor
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+# MEDIA_URL = '/media/'
+# MEDIA_ROOT = BASE_DIR / 'media'
+
+cloudinary.config(
+    cloud_name="",
+    api_key="",
+    api_secret=""
+)
