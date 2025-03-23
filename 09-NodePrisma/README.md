@@ -130,7 +130,8 @@ CREATE DATABASE IF NOT exists mi_base_de_datos;
 
 Ahora me ire al archivo `.env` para configurarlo, pero antes de configurarlo, este es el protocolo de como se configura 
 
-![image](https://github.com/user-attachments/assets/74ae6456-ed3b-48aa-81a1-12b7221b2327)
+![image](https://github.com/user-attachments/assets/a618a3b1-5832-4609-be9d-a4a2f528d5db)
+
 
 ```jsx
 //Esto significa que solo debo de cambiar =>  mysql://USER:PASSWORD@HOST:PORT/DATABASE
