@@ -70,7 +70,7 @@ Una vez hecho todo esto pasamos a crear el archivo`app.js`, si lo vez esta en la
 
 Ahora dentro del archivo **`app.js`**, copiamos  y pegamos el siguiente codigo
 
-```jsx
+```js
 import express from "express";
 
 // Aqui inicializo mi aplicacion en express
